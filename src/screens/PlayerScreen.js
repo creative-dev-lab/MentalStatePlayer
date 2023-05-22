@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button } from 'react-native';
-import TrackPlayer, { Event, State, TrackType } from 'react-native-track-player';
+import TrackPlayer, { Event, State } from 'react-native-track-player';
 
 const PlayerScreen = ({ navigation, route }) => {
 	const { state } = route.params;
