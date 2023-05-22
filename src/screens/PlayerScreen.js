@@ -24,14 +24,12 @@ const PlayerScreen = ({ navigation, route }) => {
 			TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async (data) => {
 				if (data.nextTrack) {
 					const track = await TrackPlayer.getTrack(data.nextTrack);
-					console.log('Current track:', track);
 					setCurrentTrackIndex(data.nextTrack);
 				}
 			});
 
 			TrackPlayer.addEventListener(Event.PlaybackState, async (data) => {
 				const { state: playbackState } = data;
-				console.log('Playback state:', playbackState);
 
 				if (playbackState === State.Playing) {
 					setIsPlaying(true);
@@ -51,7 +49,6 @@ const PlayerScreen = ({ navigation, route }) => {
 
 	useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-			console.log("Resetting....");
       TrackPlayer.reset();
     });
 
