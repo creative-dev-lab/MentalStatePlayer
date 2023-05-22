@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button } from 'react-native';
-import TrackPlayer, { Event, State } from 'react-native-track-player';
+import TrackPlayer from '../components/TrackPlayer';
+import { Event, State } from 'react-native-track-player';
 
 const PlayerScreen = ({ navigation, route }) => {
 	const { state } = route.params;
 	const [tracks, setTracks] = useState([]);
 	const [isPlaying, setIsPlaying] = useState(false);
+	const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
 	useEffect(() => {
 		const fetchTracks = async () => {
@@ -19,13 +21,11 @@ const PlayerScreen = ({ navigation, route }) => {
 		};
 
 		const initializePlayer = async () => {
-			await TrackPlayer.setupPlayer();
-
 			TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async (data) => {
 				if (data.nextTrack) {
 					const track = await TrackPlayer.getTrack(data.nextTrack);
 					console.log('Current track:', track);
-					// Update the track information or perform any other necessary operations
+					setCurrentTrackIndex(data.nextTrack);
 				}
 			});
 
@@ -45,15 +45,22 @@ const PlayerScreen = ({ navigation, route }) => {
 		fetchTracks();
 
 		return () => {
-			TrackPlayer.stop();
 			TrackPlayer.reset();
-			TrackPlayer.destroy();
 		};
 	}, [state]);
 
+	useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+			console.log("Resetting....");
+      TrackPlayer.reset();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
 	const handlePlayPause = async () => {
 		const currentTrack = await TrackPlayer.getCurrentTrack();
-		if (currentTrack) {
+		if (currentTrack || currentTrack == 0) {
 			const playerState = await TrackPlayer.getState();
 			if (playerState === State.Playing) {
 				await TrackPlayer.pause();
@@ -68,13 +75,14 @@ const PlayerScreen = ({ navigation, route }) => {
 	};
 
 	const handleSkipNext = async () => {
-		const currentTrack = await TrackPlayer.getCurrentTrack();
-		if (currentTrack < tracks.length - 1) {
+		const trackQueue = await TrackPlayer.getQueue();
+		if (trackQueue.length > 0 && currentTrackIndex < tracks.length - 1) {
 			await TrackPlayer.skipToNext();
 		} else if (tracks.length > 0) {
 			await TrackPlayer.reset();
 			await TrackPlayer.add(tracks);
 			await TrackPlayer.play();
+			setCurrentTrackIndex(0);
 		}
 	};
 
@@ -85,7 +93,7 @@ const PlayerScreen = ({ navigation, route }) => {
 	return (
 		<View>
 			<Text>Mental State: {state}</Text>
-			{tracks.length > 0 && <Text>Track: {tracks[0].name}</Text>}
+			{tracks.length > 0 && <Text>Track: {tracks[currentTrackIndex].name}</Text>}
 			<Button title={isPlaying ? 'Pause' : 'Play'} onPress={handlePlayPause} />
 			<Button title="Skip Next" onPress={handleSkipNext} />
 			<Button title="Go Back" onPress={handleGoBack} />

@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Button } from 'react-native';
+import TrackPlayer from '../components/TrackPlayer';
 
 const LandingScreen = ({ navigation }) => {
-  const goToPlayer = (state) => {
+  useEffect(() => {
+    const setupPlayer = async () => {
+      await TrackPlayer.setupPlayer();
+    }
+
+    setupPlayer();
+  }, []);
+
+  const goToPlayer = async (state) => {
     navigation.navigate('Player', { state });
   };
 
